@@ -1,0 +1,15 @@
+context,Paper/source,Peak URL,BigWig URL,SRA ID,Type,Notes
+WID,10.1101/gr.233098.117,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX3104579.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX3104579.bw,SRR5946184,PE,NA
+EAD,NA,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX12178805.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX12178805.bw,SRR15888109,PE,NA
+AB,NA,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX12178807.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX12178807.bw,SRR15888107,PE,NA
+E5,mixed sexstrain: DGRP 399,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/ERX3978762.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/ERX3978762.bw,ERR3975804,PE,2 raw read experiments for same accession ID
+E11,mixed sexstrain: DGRP 399,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/ERX3978749.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/ERX3978749.bw,ERR3975761,PE,NA
+E13,mixed sexstrain: DGRP 399,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/ERX3978754.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/ERX3978754.bw,ERR3975767,PE,NA
+HID,10.1016/j.cub.2021.07.030,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX10089738.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX10089738.bw,SRR13700625,PE,NA
+LIDT1,10.1038/s41467-022-31501-2,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX12261365.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX12261365.bw,SRR15972621,PE,NA
+LIDT2,10.1038/s41467-022-31501-2,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX12261367.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX12261367.bw,SRR15972623,PE,NA
+LIDT3,10.1038/s41467-022-31501-2,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX12261369.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX12261369.bw,SRR15972625,PE,NA
+PLT2,10.1371/journal.pgen.1007375,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX3945498.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX3945498.bw,SRR7013048,PE,NA
+PAE,10.1093/molbev/msae004,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX23174625.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX23174625.bw,SRR27503796,PE,NA
+O,NA,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX12178811.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX12178811.bw,SRR15888103,PE,NA
+LB,10.1038/s41467-021-27506-y,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX12440698.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX12440698.bw,SRR16155879,PE,NA
