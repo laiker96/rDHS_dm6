@@ -23,7 +23,7 @@ histone_left <- read.delim(opt$left, header=FALSE)
 histone_right <- read.delim(opt$right, header=FALSE)
 histone_center <- read.delim(opt$center, header=FALSE)
 atac <- read.delim(opt$atac, header=FALSE)
-histone_ids <- read.delim(opt$histone_ids, header=FALSE)
+histone_ids <- read.csv(opt$histone_ids, header=FALSE)
 atac_ids <- read.csv(opt$atac_ids, header=TRUE)
 
 # Combine histone signal
@@ -66,9 +66,8 @@ cCREs <- data.frame(
 )
 
 for (context in atac_ids$context) {
-  colname <- paste0(context, "_H3K27ac")
   cCREs[[context]] <- ifelse(
-    (histone[[colname]] >= tapply(histone[[colname]], atac[[context]], quantile, probs = probs)[1]) &
+    (histone[[context]] >= tapply(histone[[context]], atac[[context]], quantile, probs = probs)[1]) &
       atac[[context]] == 1,
     1, 0
   )
