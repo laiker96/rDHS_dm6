@@ -74,6 +74,8 @@ for (context in atac_ids$context) {
   )
 }
 
+print(cCREs %>% summary())
+
 # Filter and export
 cCREs <- cCREs %>% filter(rowSums(cCREs[,-c(1:4)]) > 0)
 write.table(cCREs, opt$output, quote=FALSE, sep="\t", row.names=FALSE, col.names=FALSE)
