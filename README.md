@@ -1,5 +1,3 @@
-Got it! Here's a **single `README.md` file**, fully written in Markdown, ready to drop into your GitHub repository:
-
 ```markdown
 # rDHS Processing Pipeline
 
