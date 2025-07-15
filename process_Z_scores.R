@@ -28,7 +28,6 @@ names(histone) <- histone_ids$V1
 names(atac) <- c("chr", "start", "end", "id", atac_ids$context)
 atac <- atac[apply(histone, 1, all), ]
 histone <- histone[apply(histone, 1, all), ]
-#histone[histone == 0] <- 1e-10
 histone <- log10(histone)
 
 calc_z_scores <- function(column) {
@@ -38,24 +37,7 @@ calc_z_scores <- function(column) {
 }
 
 histone <- as.data.frame(apply(histone, 2, calc_z_scores))
-str(histone)
-str(atac)
-summary(histone)
 
-data.frame(chr = atac$chr, 
-           star = atac$start, 
-           end = atac$end, 
-           id = paste("cCRE_", seq(1, dim(atac)[1]), sep = ""), 
-           AB = ifelse(test = histone$AB_H3K27ac >= 0.4 & atac$AB == 1, yes = 1, no = 0), 
-           LB = ifelse(test = histone$LB_H3K27ac >= 0.4 & atac$LB == 1, yes = 1, no = 0), 
-           E5 = ifelse(test = histone$E5_H3K27ac >= 0.4 & atac$E5 == 1, yes = 1, no = 0), 
-           E11 = ifelse(test = histone$E11_H3K27ac >= 0.4 & atac$E11 == 1, yes = 1, no = 0), 
-           E13 = ifelse(test = histone$E13_H3K27ac >= 0.4 & atac$E13 == 1, yes = 1, no = 0), 
-           EAD = ifelse(test = histone$EAD_H3K27ac >= 0.4 & atac$EAD == 1, yes = 1, no = 0), 
-           WID = ifelse(test = histone$WID_H3K27ac >= 0.4 & atac$WID == 1, yes = 1, no = 0)) -> cCREs
-
-cCREs %>% filter(rowSums(cCREs[,-c(1:4)]) > 0) -> cCREs
-colSums(cCREs[,-c(1:4)])
 
 probs <- 0.6
 data.frame(chr = atac$chr, 
@@ -82,5 +64,5 @@ data.frame(chr = atac$chr,
                         & atac$WID == 1, yes = 1, no = 0)) -> cCREs
 
 cCREs %>% filter(rowSums(cCREs[,-c(1:4)]) > 0) -> cCREs
-colSums(cCREs[,-c(1:4)])
+#colSums(cCREs[,-c(1:4)])
 write.table(cCREs, "cCREs.bed", quote=F, sep="\t", row.names = F, col.names=F)
