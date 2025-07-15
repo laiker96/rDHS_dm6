@@ -1,7 +1,7 @@
 #!/bin/bash
 
 dir=~/data_dm6_PhD/DHSs
-scriptDir=~/data_dm6_PhD/pipeline_rATAC_peaks/Toolkit/
+scriptDir=~/data_dm6_PhD/rDHS_dm6/pipeline_rATAC_peaks/Toolkit/
 
 cd $dir/Processed-DHSs
 

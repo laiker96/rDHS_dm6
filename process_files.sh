@@ -40,10 +40,10 @@ process_qpois_file() {
         return 1
     fi
 
-LC_NUMERIC=C awk 'BEGIN { OFS = "\t"; log10 = log(10) }
+awk 'BEGIN { OFS = "\t"}
      {
-         $4 = exp(-$4 * log10);
-         print
+	     $4 = 10 ^ (-$4);
+	     print
      }' "$infile" > "$outfile"
 }
 
