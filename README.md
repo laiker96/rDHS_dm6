@@ -114,21 +114,5 @@ If you use this pipeline, please cite:
 
 This repository is open-source under the [MIT License](LICENSE).
 
----
-
-## 🙋 Author
-
-Developed by **\[Your Name]**
-📫 [your.email@domain.com](mailto:your.email@domain.com)
-🔗 GitHub: [github.com/yourusername](https://github.com/yourusername)
-
-```
-
-Let me know if you want to:
-- Add an example dataset section
-- Include command-line arguments for flexibility
-- Add a visual diagram of the pipeline
-
-Or I can generate a matching `LICENSE` or `filter-long-double.py` stub as well.
 ```
 
