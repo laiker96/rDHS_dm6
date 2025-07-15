@@ -1,10 +1,10 @@
 context,Paper/source,Peak URL,BigWig URL,SRA ID,Type,Notes
-AB,10.1038/ng.3965,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX2618498.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX2618498.bw,SRR5319052,SE,NA
+E5,mixed sexstrain: DGRP 399,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/ERX3978933.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/ERX3978933.bw,ERR3976003,PE,NA
 E11,mixed sexstrain: DGRP 399,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/ERX3978843.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/ERX3978843.bw,ERR3975912,PE,NA
 E13,mixed sexstrain: DGRP 399,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/ERX3978835.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/ERX3978835.bw,ERR3975904,PE,NA
-E5,mixed sexstrain: DGRP 399,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/ERX3978933.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/ERX3978933.bw,ERR3976003,PE,NA
 EAD,10.1093/nar/gky892,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX4068068.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX4068068.bw,SRR7148579,SE,NA
 HID, 10.1101/gad.305987.117,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX3380805.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX3380805.bw,SRR6278168,SE,NA
-LB,10.1016/j.molcel.2017.02.020 ,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX2564135.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX2564135.bw,SRR5259254,SE,NA
-O,10.7554/eLife.56922,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX7723701.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX7723701.bw,SRR11084657,SE,NA
 WID,10.1038/ng.3381,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX319056.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX319056.bw,SRR927433,SE,NA
+LB,10.1016/j.molcel.2017.02.020 ,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX2564135.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX2564135.bw,SRR5259254,SE,NA
+AB,10.1038/ng.3965,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX2618498.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX2618498.bw,SRR5319052,SE,NA
+O,10.7554/eLife.56922,https://chip-atlas.dbcls.jp/data/dm6/eachData/bed05/SRX7723701.05.bed,https://chip-atlas.dbcls.jp/data/dm6/eachData/bw/SRX7723701.bw,SRR11084657,SE,NA
