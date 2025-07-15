@@ -1,4 +1,3 @@
-```markdown
 # rDHS Processing Pipeline
 
 A shell-based pipeline to identify and quantify **regulatory DNase hypersensitive sites (rDHSs)** using ATAC-seq or ChIP-seq data. It combines MACS3 peak calling, enrichment filtering, and signal quantification in a reproducible and parallelized workflow.
