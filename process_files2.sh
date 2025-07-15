@@ -1,51 +1,54 @@
 #! /bin/bash
 WORKING_DIRECTORY=$1
-METADATA_FILE=$2
 
-process_dhs_signal() {
-    local id="$1"
-    local workdir="$2"
+#!/bin/bash
 
-    local dataDir="${workdir}/DHSs"
-    local scriptDir="${workdir}/rDHS_dm6/pipeline_rATAC_peaks/Toolkit"
-    local dhs="${dataDir}/${id}.DHSs.bed"
-    local signal="${workdir}/signal_files/S3norm_rc_bedgraph/${id}_S3.bw"
+finalize_dhs() {
+    local workdir="$1"
 
-    if [[ ! -f "$dhs" || ! -f "$signal" ]]; then
-        echo "Error: Missing input file(s) for ID '$id'"
-        echo "Expected DHS: $dhs"
-        echo "Expected Signal: $signal"
-        return 1
-    fi
+    local dhs_dir="${workdir}/DHSs"
+    local processed_dir="${dhs_dir}/Processed-DHSs"
+    local script_dir="${workdir}/rDHS_dm6/pipeline_rATAC_peaks/Toolkit"
+    local all_bed="${dhs_dir}/DHS-All.bed"
+    local filtered="${dhs_dir}/DHS-Filtered.bed"
+    local tmp_sorted="${dhs_dir}/sorted"
+    local rpeaks="${dhs_dir}/rPeaks"
+    local cutoff=10
 
-    echo "Processing ID: $id"
+    echo "Combining DHSs from: $processed_dir"
+    cat "${processed_dir}"/output.* > "$all_bed"
 
-    local tmp_bed="${dataDir}/${id}_tmp.bed"
-    local new="${dataDir}/${id}.new"
-    local new_bed="${dataDir}/${id}.new.bed"
-    local out_tab="${dataDir}/${id}.out.tab"
-    local tmp1="${dataDir}/${id}.tmp.1"
-    local output="${dataDir}/Processed-DHSs/output.${id}"
+    echo "Filtering DHSs..."
+    awk -v c="$cutoff" '{
+        if ($1 !~ /_/ && $3 - $2 >= 150 && $6 > c && $5 <= 0.001)
+            print $0
+    }' "$all_bed" | grep -v -E 'chrM|chrY' > "$filtered"
 
-    mkdir -p "${dataDir}/Processed-DHSs/"
+    echo "Sorting DHSs..."
+    sort -k1,1 -k2,2n "$filtered" > "$tmp_sorted"
+    cp "$filtered" "${dhs_dir}/tmp.bed"
+    > "$rpeaks"
 
-    cp "$dhs" "$tmp_bed"
+    echo "Merging DHSs..."
+    while [[ $(wc -l < "$tmp_sorted") -gt 0 ]]; do
+        echo -e "\t$(wc -l < "$tmp_sorted") remaining..."
 
-    awk -v id="$id" '{print $1 "\t" $2 "\t" $3 "\t" id "-" NR "\t" $4}' "$tmp_bed" | sort -k4,4 > "$new"
-    awk '{print $1 "\t" $2 "\t" $3 "\t" $4}' "$new" > "$new_bed"
+        bedtools merge -i "$tmp_sorted" -c 4,6 -o collapse,collapse > "${dhs_dir}/merge"
+        python3 "${script_dir}/pick-best-peak.py" "${dhs_dir}/merge" > "${dhs_dir}/peak-list"
 
-    bigWigAverageOverBed "$signal" "$new_bed" "$out_tab"
-    sort -k1,1 "$out_tab" > "$tmp1"
+        awk 'FNR==NR {x[$1]; next} ($4 in x)' "${dhs_dir}/peak-list" "$tmp_sorted" >> "$rpeaks"
+        bedtools intersect -v -a "$tmp_sorted" -b "$rpeaks" > "${dhs_dir}/remaining"
 
-    paste "$new" "$tmp1" | awk '{print $1 "\t" $2 "\t" $3 "\t" $4 "\t" $5 "\t" $10}' | \
-        awk '$5 != 1' > "$output"
+        mv "${dhs_dir}/remaining" "$tmp_sorted"
+    done
 
-    # Clean up
-    rm -f "$tmp_bed" "$new" "$new_bed" "$out_tab" "$tmp1"
+    mv "$rpeaks" "${dhs_dir}/rPeaks.bed"
+
+    echo "Cleaning up..."
+    rm -f "${dhs_dir}/merge" "${dhs_dir}/peak-list" "$tmp_sorted" "${dhs_dir}/tmp.bed"
+    echo "Final DHS set written to: ${dhs_dir}/rPeaks.bed"
 }
 
-export -f process_dhs_signal
-
-cut -f 5 -d , "$METADATA_FILE" | tail -n +2 \
-    | parallel process_dhs_signal {} "$WORKING_DIRECTORY"
-
+# Export if needed for GNU parallel or external sourcing
+export -f finalize_dhs
+finalize_dhs $WORKING_DIRECTORY
