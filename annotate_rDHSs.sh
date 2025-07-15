@@ -39,7 +39,7 @@ while read ID; do
     cut -f 5 ${WORKING_DIRECTORY}/out.bed | paste ${WORKING_DIRECTORY}/dataset_right.bed - > ${WORKING_DIRECTORY}/tmp && \
     mv ${WORKING_DIRECTORY}/tmp ${WORKING_DIRECTORY}/dataset_right.bed && \
     rm ${WORKING_DIRECTORY}/out.bed
-done < <(cut -f 1 -d , $METADATA_H3K27ac | tail +n 2)
+done < <(cut -f 1 -d , $METADATA_H3K27ac | tail -n +2)
 
 while read ID; do
     bigWigAverageOverBed -bedOut=${WORKING_DIRECTORY}/out.bed "${H3K27ac_DIR}/${ID}.bw" "${WORKING_DIRECTORY}/left_intervals.bed" ${WORKING_DIRECTORY}/out.tab && \
@@ -47,7 +47,7 @@ while read ID; do
     cut -f 5 ${WORKING_DIRECTORY}/out.bed | paste ${WORKING_DIRECTORY}/dataset_left.bed - > ${WORKING_DIRECTORY}/tmp && \
     mv ${WORKING_DIRECTORY}/tmp ${WORKING_DIRECTORY}/dataset_left.bed && \
     rm ${WORKING_DIRECTORY}/out.bed
-done < <(cut -f 1 -d , $METADATA_H3K27ac | tail +n 2)
+done < <(cut -f 1 -d , $METADATA_H3K27ac | tail -n +2)
 
 while read ID; do
     bigWigAverageOverBed -bedOut=${WORKING_DIRECTORY}/out.bed "${H3K27ac_DIR}/${ID}.bw" "${WORKING_DIRECTORY}/central_intervals.bed" ${WORKING_DIRECTORY}/out.tab && \
@@ -55,7 +55,7 @@ while read ID; do
     cut -f 5 ${WORKING_DIRECTORY}/out.bed | paste ${WORKING_DIRECTORY}/dataset_central.bed - > ${WORKING_DIRECTORY}/tmp && \
     mv ${WORKING_DIRECTORY}/tmp ${WORKING_DIRECTORY}/dataset_central.bed && \
     rm ${WORKING_DIRECTORY}/out.bed
-done < <(cut -f 1 -d , $METADATA_H3K27ac | tail +n 2)
+done < <(cut -f 1 -d , $METADATA_H3K27ac | tail -n +2)
 
 rm ${WORKING_DIRECTORY}/left_intervals.bed \
 	${WORKING_DIRECTORY}/right_intervals.bed \

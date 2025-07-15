@@ -1,6 +1,7 @@
 #! /bin/bash
 WORKING_DIRECTORY=$1
 METADATA_FILE=$2
+JOBS=$3
 
 mkdir -p "$WORKING_DIRECTORY"/macs_peaks
 
@@ -194,8 +195,6 @@ finalize_dhs() {
     echo "Final DHS set written to: ${dhs_dir}/rPeaks.bed"
 }
 
-
-
 export -f macs3_run
 export -f macs3_coverage
 export -f process_qpois_file
@@ -205,22 +204,21 @@ export -f process_dhs_signal
 export -f finalize_dhs
 
 cut -f 5 -d , "$METADATA_FILE" | tail -n +2 \
-    | parallel macs3_run {} "$WORKING_DIRECTORY"
+    | parallel -j "$JOBS" macs3_run {} "$WORKING_DIRECTORY"
 
 cut -f 5 -d , "$METADATA_FILE" | tail -n +2 \
-    | parallel macs3_coverage {} "$WORKING_DIRECTORY"
+    | parallel -j "$JOBS" macs3_coverage {} "$WORKING_DIRECTORY"
 
 cut -f 5 -d , "$METADATA_FILE" | tail -n +2 \
-    | parallel process_qpois_file "$WORKING_DIRECTORY/macs_peaks/{}/{}_qpois.bdg" "$WORKING_DIRECTORY/macs_peaks/{}/{}_qpois_proc.bdg"
+    | parallel -j "$JOBS" process_qpois_file "$WORKING_DIRECTORY/macs_peaks/{}/{}_qpois.bdg" "$WORKING_DIRECTORY/macs_peaks/{}/{}_qpois_proc.bdg"
 
 cut -f 5 -d , "$METADATA_FILE" | tail -n +2 \
-    | parallel intersect_intervals {} "$WORKING_DIRECTORY"
+    | parallel -j "$JOBS" intersect_intervals {} "$WORKING_DIRECTORY"
 
 cut -f 5 -d , "$METADATA_FILE" | tail -n +2 \
-    | parallel process_enrichment_file {} "$WORKING_DIRECTORY"
+    | parallel -j "$JOBS" process_enrichment_file {} "$WORKING_DIRECTORY"
 
 cut -f 5 -d , "$METADATA_FILE" | tail -n +2 \
-    | parallel process_dhs_signal {} "$WORKING_DIRECTORY"
+    | parallel -j "$JOBS" process_dhs_signal {} "$WORKING_DIRECTORY"
 
 finalize_dhs "$WORKING_DIRECTORY"
-

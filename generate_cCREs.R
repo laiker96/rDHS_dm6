@@ -1,7 +1,6 @@
 #!/usr/bin/env Rscript
 
 library(optparse)
-library(tidyverse)
 
 # Define command-line options
 option_list <- list(
@@ -23,7 +22,7 @@ histone_left <- read.delim(opt$left, header=FALSE)
 histone_right <- read.delim(opt$right, header=FALSE)
 histone_center <- read.delim(opt$center, header=FALSE)
 atac <- read.delim(opt$atac, header=FALSE)
-histone_ids <- read.csv(opt$histone_ids, header=FALSE)
+histone_ids <- read.csv(opt$histone_ids, header=TRUE)
 atac_ids <- read.csv(opt$atac_ids, header=TRUE)
 
 # Combine histone signal
@@ -40,7 +39,7 @@ for (i in 5:ncol(histone_left)) {
 
 # Clean up
 histone <- histone[,-c(1:4)]
-colnames(histone) <- histone_ids$V1
+colnames(histone) <- histone_ids$context
 colnames(atac) <- c("chr", "start", "end", "id", atac_ids$context)
 
 # Keep only rows with all histone signals present
@@ -65,7 +64,7 @@ cCREs <- data.frame(
   id = paste("cCRE_", seq_len(nrow(atac)), sep = "")
 )
 
-for (context in atac_ids$context) {
+for (context in histone_ids$context) {
   cCREs[[context]] <- ifelse(
     (histone[[context]] >= tapply(histone[[context]], atac[[context]], quantile, probs = probs)[1]) &
       atac[[context]] == 1,
@@ -73,8 +72,9 @@ for (context in atac_ids$context) {
   )
 }
 
-print(cCREs %>% summary())
 
 # Filter and export
-cCREs <- cCREs %>% filter(rowSums(cCREs[,-c(1:4)]) > 0)
+cCREs <- cCREs[rowSums(cCREs[,-c(1:4)]) > 0, ]
+print("Found the following number of cCREs in each context:")
+print(colSums(cCREs[, -c(1:4)]))
 write.table(cCREs, opt$output, quote=FALSE, sep="\t", row.names=FALSE, col.names=FALSE)
