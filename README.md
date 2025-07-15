@@ -1,118 +1,136 @@
-# rDHS Processing Pipeline
+---
 
-A shell-based pipeline to identify and quantify **regulatory DNase hypersensitive sites (rDHSs)** using ATAC-seq or ChIP-seq data. It combines MACS3 peak calling, enrichment filtering, and signal quantification in a reproducible and parallelized workflow.
+# 🧬 DHS-to-cCRE Pipeline
+
+This pipeline processes open chromatin data (e.g., DNase-seq or ATAC-seq) to identify high-confidence **candidate cis-regulatory elements (cCREs)** by integrating chromatin accessibility and histone modification signals (e.g., H3K27ac).
+
+It performs peak calling, signal enrichment scoring, DHS filtering, normalization, and final cCRE annotation using R-based quantile thresholds.
 
 ---
 
-## 📁 Directory Structure
+## 📁 Working Directory Structure
 
 ```
-
-WORKING\_DIRECTORY/
-├── bams/                           # Input BAM files (<ID>\_out.bam)
-├── macs\_peaks/                     # Output from MACS3 and filtering
-│   └── <ID>/                       # Per-sample results
-├── DHSs/                           # Final rDHSs and signal-annotated output
-│   └── Processed-DHSs/
-├── signal\_files/
-│   └── S3norm\_rc\_bedgraph/        # BigWig files (<ID>\_S3.bw)
-├── METADATA.csv                   # Metadata file (sample ID in column 5)
-├── run\_pipeline.sh                # Master pipeline script
-
-````
+├── bams/
+│   ├── *out_.bam
+│   ├── *out_.bam.bai
+├── signal_files/
+│   └── S3norm_rc_bedgraph/
+│       └── *_S3.bw
+├── H3K27ac_data/
+│   ├── *.bw
+│   ├── *.bed
+```
 
 ---
 
-## ⚙️ Requirements
+## 🧩 Pipeline Overview
 
-- Bash ≥ 4
-- [MACS3](https://github.com/macs3-project/MACS)
-- [BEDTools](https://bedtools.readthedocs.io/)
-- [`bigWigAverageOverBed`](http://hgdownload.soe.ucsc.edu/admin/exe/)
-- GNU `parallel`
-- `awk`, `sort`, `paste`, `wc`
-- Python 3 (for `filter-long-double.py`)
+1. **Peak Calling**
+   Uses MACS3 on BAM files to generate DHS regions.
+
+2. **Signal Enrichment**
+   Calculates QPoisson enrichment scores across DHSs.
+
+3. **Filtering DHSs**
+   Retains only enriched DHSs (length >150 bp and signal > threshold).
+
+4. **BigWig Signal Averaging**
+   Uses `bigWigAverageOverBed` to extract signal intensities from ATAC/H3K27ac data.
+
+5. **Quantile Filtering (R)**
+   Identifies high-signal DHSs based on quantile thresholds in a context-specific manner.
+
+6. **Final Output**
+   Annotated BED files containing candidate cCREs per context.
 
 ---
 
-## 🚀 Usage
+## 📦 Requirements
+
+Install the following dependencies:
+
+* **Bash + GNU Coreutils**
+* [MACS3](https://github.com/macs3-project/MACS)
+* [BEDOPS](https://bedops.readthedocs.io/)
+* [bigWigAverageOverBed](https://hgdownload.soe.ucsc.edu/admin/exe/)
+* `R` with the following packages:
+
+  * `data.table`
+  * `dplyr`
+* [`GNU parallel`](https://www.gnu.org/software/parallel/)
+
+You can install R dependencies via:
+
+```r
+install.packages(c("data.table", "dplyr"))
+```
+
+---
+
+## 🚀 Quickstart
 
 ```bash
-bash run_pipeline.sh /absolute/path/to/WORKING_DIRECTORY /absolute/path/to/METADATA.csv
-````
+# Step 1: Set your working directory
+export WORKING_DIRECTORY="/your/working/directory"
+export METADATA_FILE="data/metadata.tsv"
 
-* The **working directory** contains all input/output.
-* The **metadata CSV** should have sample IDs in the **5th column** (no header assumed by default).
+# Step 2: Call peaks with MACS3
+bash scripts/call_macs3.sh
 
----
+# Step 3: Process QPoisson signal and DHSs
+bash scripts/process_signal.sh
 
-## 🧪 Pipeline Overview
+# Step 4: Compute normalized signals (bigWigAverageOverBed required)
+bash scripts/compute_qpoisson.sh
 
-### 1. Peak Calling with MACS3
-
-Calls peaks per sample using `--shift -75 --extsize 150` to accommodate ATAC-seq data.
-
-### 2. qPoisson Enrichment Scores
-
-Computes enrichment scores using `macs3 bdgcmp -m qpois`.
-
-### 3. Signal Processing
-
-Converts qPoisson (-log10) values to p-values, filters by intersection with MACS3 peaks.
-
-### 4. Iterative DHS Calling
-
-Applies a custom Python script (`filter-long-double.py`) to filter by enrichment thresholds (from `1e-2` to `1e-325`), merges peaks, and selects rDHSs up to 400 bp.
-
-Outputs:
-
-* `<ID>.DHSs.bed`: rDHSs
-* `<ID>.Excluded.bed`: filtered-out regions
-
-### 5. Signal Quantification
-
-Uses UCSC’s `bigWigAverageOverBed` to quantify the normalized signal over each rDHS.
-
-Output:
-
-* `DHSs/Processed-DHSs/output.<ID>`: BED file with per-rDHS signal
+# Step 5: Run quantile filtering in R
+Rscript scripts/compute_quantiles.R
+```
 
 ---
 
-## 📝 Output Format
+## 📄 Input Files
 
-Each `output.<ID>` file includes:
+* `metadata.tsv`: Sample info with columns:
 
-| Column | Description             |
-| ------ | ----------------------- |
-| 1      | Chromosome              |
-| 2      | Start                   |
-| 3      | End                     |
-| 4      | DHS ID (`<ID>-<index>`) |
-| 5      | Score from MACS3        |
-| 6      | Mean signal             |
+  ```
+  sample_id    replicate    context    tissue
+  ```
 
----
+* `.bam` files: Raw aligned reads.
 
-## 🧹 Temporary Files
-
-Temporary/intermediate files are kept within `macs_peaks/<ID>/tmp_files/` and `DHSs/`. Cleaned automatically after final output is saved.
+* `.bw` files: Signal tracks for ATAC-seq and H3K27ac.
 
 ---
 
-## 🧾 Citation
+## 📤 Output Files
 
-If you use this pipeline, please cite:
-
-* Zhang et al., *MACS: Model-based Analysis of ChIP-Seq*, Genome Biology (2008)
-* Quinlan & Hall, *BEDTools*, Bioinformatics (2010)
-* UCSC Genome Browser tools
+* `output/dhs/`: All peaks and filtered DHSs per sample.
+* `output/qpoisson/`: DHSs with signal scores.
+* `output/bigwig_signal/`: Normalized average signals per site.
+* `output/cCREs/`: Final cCRE BED files per context.
 
 ---
 
-## 📄 License
+## 📊 Final Output Format
 
-This repository is open-source under the [MIT License](LICENSE).
+Final annotated BED file (`output/cCREs/`) contains:
 
 ```
+chr    start    end    name    score    strand
+```
+
+Where `name` is the unique cCRE ID and `score` is the averaged normalized signal.
+
+---
+
+## 📌 Notes
+
+* You can adjust the `minP`, `signal threshold`, or `quantile` cutoffs in the R scripts as needed.
+* Designed for DNase-seq or ATAC-seq input data but flexible to other open chromatin assays.
+
+---
+
+
 
