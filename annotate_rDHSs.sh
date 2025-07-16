@@ -7,8 +7,12 @@ H3K27ac_DIR=$4
 METADATA_H3K27ac=$5
 
 for BED in ${WORKING_DIRECTORY}/DHSs/Processed-DHSs/output*; do            
-sort-bed --max-mem 32G $BED > tmp && mv tmp $BED
+sort-bed --max-mem 8G $BED > tmp && mv tmp $BED
 done
+
+sort-bed --max-mem 8G "${WORKING_DIRECTORY}/DHSs/rPeaks.bed" \
+    > "${WORKING_DIRECTORY}/DHSs/tmp_sort" && \
+mv "${WORKING_DIRECTORY}/DHSs/tmp_sort" "${WORKING_DIRECTORY}/DHSs/rPeaks.bed"
 
 cut -f 1-4 ${WORKING_DIRECTORY}/DHSs/rPeaks.bed > ${WORKING_DIRECTORY}/reference.bed
 
