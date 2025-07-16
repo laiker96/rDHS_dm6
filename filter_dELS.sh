@@ -14,6 +14,6 @@ bedtools slop -b 500 -i "${TSS_BED}" -g "${GENOME_FILE}" \
 
 COLUMN_INDEX=5  
 tail -n +2 "${METADATA_FILE}" | cut -f 1 -d , | while read LINE; do
-    awk -v col="$COLUMN_INDEX" '$col == 1' "${CREs}" | cut -f1-4 > "${CREs_DIR}/dELS_${LINE}.bed"
+    awk -v col="$COLUMN_INDEX" '$col == 1' "${OUTFILE}" | cut -f1-4 > "${CREs_DIR}/dELS_${LINE}.bed"
     ((COLUMN_INDEX++))
 done
