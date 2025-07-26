@@ -1,9 +1,29 @@
-#! /bin/bash
-WORKING_DIRECTORY=$1
-METADATA_FILE=$2
-JOBS=$3
+#!/bin/bash
 
-mkdir -p "$WORKING_DIRECTORY"/macs_peaks
+set -euo pipefail
+
+# ------------------ HELP & ARGUMENT PARSING ------------------ #
+usage() {
+    echo "Usage: $0 -w working_directory -l file_list -j jobs"
+    exit 1
+}
+
+while getopts ":w:l:j:" opt; do
+  case $opt in
+    w) working_directory="$OPTARG" ;;
+    l) file_list="$OPTARG" ;;
+    j) jobs="$OPTARG" ;;
+    *) usage ;;
+  esac
+done
+
+if [ -z "${working_directory:-}" ]; then echo "Missing: working_directory"; usage; fi
+if [ -z "${file_list:-}" ]; then echo "Missing: file_list"; usage; fi
+if [ -z "${jobs:-}" ]; then echo "Missing: jobs"; usage; fi
+
+# ------------------ FUNCTIONS ------------------ #
+
+mkdir -p "$working_directory"/peak_files/ATAC
 
 macs3_run() {
     local sample_id="$1"
@@ -12,11 +32,11 @@ macs3_run() {
     echo "Running MACS3 for ${sample_id} in ${workdir}"
 
     macs3 callpeak \
-        -t "${workdir}/bams/${sample_id}_out.bam" \
+        -t "${workdir}/bams/${sample_id}.bam" \
         -f BAM \
         --nomodel \
         -n "${sample_id}" \
-        --outdir "${workdir}/macs_peaks/${sample_id}" \
+        --outdir "${workdir}/peak_files/ATAC/${sample_id}" \
         --shift -75 \
         --extsize 150 \
         --keep-dup all \
@@ -27,17 +47,20 @@ macs3_coverage() {
     local sample_id="$1"
     local workdir="$2"
 
-    macs3 bdgcmp -t "${workdir}/macs_peaks/${sample_id}/${sample_id}_treat_pileup.bdg" \
-	    -c "${workdir}/macs_peaks/${sample_id}/${sample_id}_control_lambda.bdg" \
-	    -m qpois -o "${workdir}/macs_peaks/${sample_id}/${sample_id}_qpois.bdg"
+    macs3 bdgcmp -t "${workdir}/peak_files/ATAC/${sample_id}/${sample_id}_treat_pileup.bdg" \
+	    -c "${workdir}/peak_files/ATAC/${sample_id}/${sample_id}_control_lambda.bdg" \
+	    -m qpois -o "${workdir}/peak_files/ATAC/${sample_id}/${sample_id}_qpois.bdg"
 }
 
 process_qpois_file() {
-    local infile="$1"
-    local outfile="$2"
+    local sample_id="$1"
+    local workdir="$2"
+    
+    local infile="$workdir/peak_files/ATAC/${sample_id}/${sample_id}_qpois.bdg"
+    local outfile="$workdir/peak_files/ATAC/${sample_id}/${sample_id}_qpois_proc.bdg"
 
-    if [[ -z "$infile" || -z "$outfile" ]]; then
-        echo "Usage: process_qpois_file <input_file> <output_file>"
+    if [[ -z "$sample_id" || -z "$workdir" ]]; then
+        echo "Usage: process_qpois_file <sample_id> <workdir>"
         return 1
     fi
 
@@ -55,17 +78,18 @@ intersect_intervals() {
     echo "Intersecting intervals for ${sample_id}"
 
     bedtools intersect -u -wa -f 1.0 \
-        -a "${workdir}/macs_peaks/${sample_id}/${sample_id}_qpois_proc.bdg" \
-        -b "${workdir}/macs_peaks/${sample_id}/${sample_id}_peaks.narrowPeak" \
-        > "${workdir}/macs_peaks/${sample_id}/${sample_id}_qpois.bed"
+        -a "${workdir}/peak_files/ATAC/${sample_id}/${sample_id}_qpois_proc.bdg" \
+        -b "${workdir}/peak_files/ATAC/${sample_id}/${sample_id}_peaks.narrowPeak" \
+        > "${workdir}/peak_files/ATAC/${sample_id}/${sample_id}_qpois.bed"
 }
 
 process_enrichment_file() {
     local enrich="$1"
     local workdir="$2"
-    local dataDir="${workdir}/macs_peaks/${enrich}"
+
+    local dataDir="${workdir}/peak_files/ATAC/${enrich}"
     local minP=325
-    local scriptDir=~/data_dm6_PhD/rDHS_dm6/pipeline_rATAC_peaks/Toolkit
+    local scriptDir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/python_scripts/"
 
     echo "Step 1 ..."
     cp "$dataDir/${enrich}_qpois.bed" $dataDir/tmp.1
@@ -74,8 +98,8 @@ process_enrichment_file() {
     for j in $(seq 2 1 $minP); do
         cutoff=$(awk "BEGIN { printf \"1E-%d\", $j }")
         echo "$cutoff"
-        
-        python3 "$scriptDir/filter-long-double.py" "${dataDir}/tmp.1" "$cutoff" > ${dataDir}/tmp.2
+
+        python3 "$scriptDir/filter_long_double.py" "${dataDir}/tmp.1" "$cutoff" > ${dataDir}/tmp.2
 
         bedtools merge -d 1 -c 4 -o min -i ${dataDir}/tmp.2 | \
             awk '{if ($3-$2 >= 50) print $0}' > "${dataDir}/tmp_files/$enrich.$cutoff.bed"
@@ -112,9 +136,9 @@ process_dhs_signal() {
     local workdir="$2"
 
     local dataDir="${workdir}/DHSs"
-    local scriptDir="${workdir}/rDHS_dm6/pipeline_rATAC_peaks/Toolkit"
+    local scriptDir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/python_scripts/"
     local dhs="${dataDir}/${id}.DHSs.bed"
-    local signal="${workdir}/signal_files/S3norm_rc_bedgraph/${id}_S3.bw"
+    local signal="${workdir}/signal_files/ATAC/${id}.bw"
 
     if [[ ! -f "$dhs" || ! -f "$signal" ]]; then
         echo "Error: Missing input file(s) for ID '$id'"
@@ -154,7 +178,7 @@ finalize_dhs() {
 
     local dhs_dir="${workdir}/DHSs"
     local processed_dir="${dhs_dir}/Processed-DHSs"
-    local script_dir="${workdir}/rDHS_dm6/pipeline_rATAC_peaks/Toolkit"
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/python_scripts/"
     local all_bed="${dhs_dir}/DHS-All.bed"
     local filtered="${dhs_dir}/DHS-Filtered.bed"
     local tmp_sorted="${dhs_dir}/sorted"
@@ -180,7 +204,7 @@ finalize_dhs() {
         echo -e "\t$(wc -l < "$tmp_sorted") remaining..."
 
         bedtools merge -i "$tmp_sorted" -c 4,6 -o collapse,collapse > "${dhs_dir}/merge"
-        python3 "${script_dir}/pick-best-peak.py" "${dhs_dir}/merge" > "${dhs_dir}/peak-list"
+        python3 "${script_dir}/pick_best_peak.py" "${dhs_dir}/merge" > "${dhs_dir}/peak-list"
 
         awk 'FNR==NR {x[$1]; next} ($4 in x)' "${dhs_dir}/peak-list" "$tmp_sorted" >> "$rpeaks"
         bedtools intersect -v -a "$tmp_sorted" -b "$rpeaks" > "${dhs_dir}/remaining"
@@ -203,22 +227,18 @@ export -f process_enrichment_file
 export -f process_dhs_signal
 export -f finalize_dhs
 
-cut -f 5 -d , "$METADATA_FILE" | tail -n +2 \
-    | parallel -j "$JOBS" macs3_run {} "$WORKING_DIRECTORY"
+# ------------------ PIPELINE EXECUTION ------------------ #
 
-cut -f 5 -d , "$METADATA_FILE" | tail -n +2 \
-    | parallel -j "$JOBS" macs3_coverage {} "$WORKING_DIRECTORY"
+parallel -j "$jobs" macs3_run {} "$working_directory" < "$file_list"
 
-cut -f 5 -d , "$METADATA_FILE" | tail -n +2 \
-    | parallel -j "$JOBS" process_qpois_file "$WORKING_DIRECTORY/macs_peaks/{}/{}_qpois.bdg" "$WORKING_DIRECTORY/macs_peaks/{}/{}_qpois_proc.bdg"
+parallel -j "$jobs" macs3_coverage {} "$working_directory" < "$file_list"
 
-cut -f 5 -d , "$METADATA_FILE" | tail -n +2 \
-    | parallel -j "$JOBS" intersect_intervals {} "$WORKING_DIRECTORY"
+parallel -j "$jobs" process_qpois_file {} "$working_directory" < "$file_list"
 
-cut -f 5 -d , "$METADATA_FILE" | tail -n +2 \
-    | parallel -j "$JOBS" process_enrichment_file {} "$WORKING_DIRECTORY"
+parallel -j "$jobs" intersect_intervals {} "$working_directory" < "$file_list"
 
-cut -f 5 -d , "$METADATA_FILE" | tail -n +2 \
-    | parallel -j "$JOBS" process_dhs_signal {} "$WORKING_DIRECTORY"
+parallel -j "$jobs" process_enrichment_file {} "$working_directory" < "$file_list"
 
-finalize_dhs "$WORKING_DIRECTORY"
+parallel -j "$jobs" process_dhs_signal {} "$working_directory" < "$file_list"
+
+finalize_dhs "$working_directory"
