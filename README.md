@@ -1,6 +1,6 @@
 ---
 
-# 🧬 DHS-to-cCRE Pipeline
+# DHS-to-cCRE Pipeline
 
 This pipeline processes open chromatin data (e.g., DNase-seq or ATAC-seq) to identify high-confidence **candidate cis-regulatory elements (cCREs)** by integrating chromatin accessibility and histone modification signals (e.g., H3K27ac).
 
@@ -8,23 +8,25 @@ It performs peak calling, signal enrichment scoring, DHS filtering, normalizatio
 
 ---
 
-## 📁 Working Directory Structure
+## Working Directory Structure
 
 ```
 ├── bams/
-│   ├── *out_.bam
-│   ├── *out_.bam.bai
+│   ├── *.bam
+│   ├── *.bam.bai
 ├── signal_files/
-│   └── S3norm_rc_bedgraph/
-│       └── *_S3.bw
-├── H3K27ac_data/
-│   ├── *.bw
-│   ├── *.bed
+│   └── ATAC/
+│       └── *.bw
+│   └── H3K27ac/
+│       └── *.bw
+├── peak_files/
+│   └── H3K27ac/
+│       └── *.bed
 ```
 
 ---
 
-## 🧩 Pipeline Overview
+## Pipeline Overview
 
 1. **Peak Calling**
    Uses MACS3 on BAM files to generate DHS regions.
@@ -131,6 +133,4 @@ Where `name` is the unique cCRE ID and `score` is the averaged normalized signal
 * Designed for DNase-seq or ATAC-seq input data but flexible to other open chromatin assays.
 
 ---
-
-
 
