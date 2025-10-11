@@ -1,7 +1,7 @@
 ---
 
 # DHS-to-cCRE Pipeline
-
+![Alt text](figures/methods.png)
 This pipeline processes open chromatin data (e.g., DNase-seq or ATAC-seq) to identify high-confidence **candidate cis-regulatory elements (cCREs)** by integrating chromatin accessibility and histone modification signals (e.g., H3K27ac).
 
 It performs peak calling, signal enrichment scoring, DHS filtering, normalization, and final cCRE annotation using R-based quantile thresholds.
