@@ -1,136 +1,126 @@
----
+# rDHS_dm6: Pipeline for the Identification of Transcriptional Enhancers in *Drosophila melanogaster*
 
-# DHS-to-cCRE Pipeline
-![Alt text](figures/methods.png)
-This pipeline processes open chromatin data (e.g., DNase-seq or ATAC-seq) to identify high-confidence **candidate cis-regulatory elements (cCREs)** by integrating chromatin accessibility and histone modification signals (e.g., H3K27ac).
-
-It performs peak calling, signal enrichment scoring, DHS filtering, normalization, and final cCRE annotation using R-based quantile thresholds.
+This repository implements the **rDHS_dm6** pipeline for the identification of **transcriptional enhancers** in *Drosophila melanogaster* using **ATAC-seq** and **H3K27ac ChIP-seq** data across nine spatio-temporal contexts.  
+The workflow is an **adaptation of the ENCODE cCRE pipeline** ([weng-lab/ENCODE-cCREs](https://github.com/weng-lab/ENCODE-cCREs/tree/master/Version-4/cCRE-Pipeline)).
 
 ---
 
-## Working Directory Structure
-
-```
-├── bams/
-│   ├── *.bam
-│   ├── *.bam.bai
-├── signal_files/
-│   └── ATAC/
-│       └── *.bw
-│   └── H3K27ac/
-│       └── *.bw
-├── peak_files/
-│   └── H3K27ac/
-│       └── *.bed
-```
+## Table of Contents
+1. [Overview](#overview)
+2. [Pipeline Summary](#pipeline-summary)
+3. [Repository Structure](#repository-structure)
+4. [Dependencies](#dependencies)
+5. [How to Run the Pipeline](#how-to-run-the-pipeline)
 
 ---
 
-## Pipeline Overview
+# Overview
 
-1. **Peak Calling**
-   Uses MACS3 on BAM files to generate DHS regions.
-
-2. **Signal Enrichment**
-   Calculates QPoisson enrichment scores across DHSs.
-
-3. **Filtering DHSs**
-   Retains only enriched DHSs (length >150 bp and signal > threshold).
-
-4. **BigWig Signal Averaging**
-   Uses `bigWigAverageOverBed` to extract signal intensities from ATAC/H3K27ac data.
-
-5. **Quantile Filtering (R)**
-   Identifies high-signal DHSs based on quantile thresholds in a context-specific manner.
-
-6. **Final Output**
-   Annotated BED files containing candidate cCREs per context.
+The **rDHS_dm6** pipeline integrates **ATAC-seq** and **H3K27ac** data to identify active regulatory regions in the *Drosophila melanogaster* genome.  
+It defines a non-redundant set of accessible chromatin sites (*representative DNase hypersensitive sites*, rDHSs), evaluates their histone acetylation signal, and classifies them as active **candidate cis-regulatory elements (cCREs)** or **distal enhancers (dELS)**.
 
 ---
 
-## 📦 Requirements
+# Pipeline Summary
 
-Install the following dependencies:
+The workflow consists of four main stages:
 
-* **Bash + GNU Coreutils**
-* [MACS3](https://github.com/macs3-project/MACS)
-* [BEDOPS](https://bedops.readthedocs.io/)
-* [bigWigAverageOverBed](https://hgdownload.soe.ucsc.edu/admin/exe/)
-* `R` with the following packages:
+1. **Refinement of ATAC-seq peaks**  
+   - **Script:** `generate_rDHS.sh`  
+   - Refines ATAC-seq peak regions and defines high-resolution DNase hypersensitive sites (DHSs).
 
-  * `data.table`
-  * `dplyr`
-* [`GNU parallel`](https://www.gnu.org/software/parallel/)
+2. **Generation of representative DHSs (rDHSs)**  
+   - **Script:** `generate_rDHS.sh`  
+   - Merges DHSs across the nine contexts into a non-redundant set of representative DHSs.
 
-You can install R dependencies via:
+3. **Integration of H3K27ac and identification of cCREs**  
+   - **Script:** `annotate_rDHSs.sh` and `generate_cCREs.R`  
+   - Quantifies H3K27ac signal around each rDHS, normalizes the data, and defines active cCREs per context.
 
-```r
-install.packages(c("data.table", "dplyr"))
-```
+4. **Filtering of distal enhancers (dELS)**  
+   - **Script:** `filter_dELS.sh`  
+   - Removes promoter-proximal cCREs (within ±500 bp of transcription start sites) to obtain the final set of distal enhancers.
+
+![Pipeline Diagram](figures/methods.png)
+
+**Figure:** Overview of the rDHS_dm6 pipeline for defining transcriptional enhancers in *Drosophila melanogaster* from ATAC-seq and H3K27ac data.
 
 ---
 
-## 🚀 Quickstart
-
+# Repository Structure
 ```bash
-# Step 1: Set your working directory
-export WORKING_DIRECTORY="/your/working/directory"
-export METADATA_FILE="data/metadata.tsv"
-
-# Step 2: Call peaks with MACS3
-bash scripts/call_macs3.sh
-
-# Step 3: Process QPoisson signal and DHSs
-bash scripts/process_signal.sh
-
-# Step 4: Compute normalized signals (bigWigAverageOverBed required)
-bash scripts/compute_qpoisson.sh
-
-# Step 5: Run quantile filtering in R
-Rscript scripts/compute_quantiles.R
+rDHS_dm6/
+├── data/
+│ ├── ATAC_seq/ # ATAC-seq peak and signal files
+│ ├── H3K27ac/ # H3K27ac signal files
+│ ├── dm6.chrom.sizes # Genome size file
+│ └── TSSs_dm6.bed # Reference transcription start sites
+├── metadata/
+│ ├── ATAC.txt
+│ ├── ATAC_ids_complete_data.txt
+│ ├── H3K27ac_ids.txt
+│ └── ...
+├── scripts/
+│ ├── generate_rDHS.sh
+│ ├── annotate_rDHSs.sh
+│ ├── generate_cCREs.R
+│ └── filter_dELS.sh
+├── results/
+│ ├── DHSs/
+│ ├── rDHSs/
+│ ├── cCREs/
+│ └── dELS/
+└── README.md
 ```
 
 ---
 
-## 📄 Input Files
+# Dependencies
 
-* `metadata.tsv`: Sample info with columns:
-
-  ```
-  sample_id    replicate    context    tissue
-  ```
-
-* `.bam` files: Raw aligned reads.
-
-* `.bw` files: Signal tracks for ATAC-seq and H3K27ac.
+- **bash ≥ 4.0**  
+- **bedtools ≥ 2.30.0**  
+- **bedmap (from BEDOPS ≥ 2.4.40)**  
+- **MACS3 ≥ 3.0.0**  
+- **R ≥ 4.3.0** with the package:
+  - `optparse`
 
 ---
 
-## 📤 Output Files
+# How to Run the Pipeline
 
-* `output/dhs/`: All peaks and filtered DHSs per sample.
-* `output/qpoisson/`: DHSs with signal scores.
-* `output/bigwig_signal/`: Normalized average signals per site.
-* `output/cCREs/`: Final cCRE BED files per context.
+All commands should be executed from the repository root directory (`rDHS_dm6/`).  
+Each step corresponds to one of the main scripts described above.
 
----
+### 1. Generate representative DHSs
+```bash
+bash generate_rDHS.sh -w ../ -l ../metadata/ATAC.txt -j 14
 
-## 📊 Final Output Format
+2. Annotate rDHSs with H3K27ac signal
 
-Final annotated BED file (`output/cCREs/`) contains:
+bash annotate_rDHSs.sh \
+  -w ../dELS_all_contexts_tests \
+  -m ../metadata_files/ATAC_ids_complete_data.txt \
+  -g ../dm6_genome_datafiles/dm6.chrom.sizes \
+  -a ../signal_files/H3K27ac \
+  -e ../metadata_files/H3K27ac_ids.txt
 
-```
-chr    start    end    name    score    strand
-```
+3. Generate candidate cis-regulatory elements (cCREs)
 
-Where `name` is the unique cCRE ID and `score` is the averaged normalized signal.
+Rscript generate_cCREs.R \
+  -l ../dELS_all_contexts_tests/dataset_left.bed \
+  -r ../dELS_all_contexts_tests/dataset_right.bed \
+  -c ../dELS_all_contexts_tests/dataset_central.bed \
+  -a ../dELS_all_contexts_tests/reference.bed \
+  -o ../dELS_all_contexts_tests/cCREs.bed \
+  -p 0.6
 
----
+4. Filter distal enhancers (remove promoter-proximal elements)
 
-## 📌 Notes
+bash filter_dELS.sh \
+  -c ../dELS_all_contexts_tests/cCREs.bed \
+  -t ../dm6_genome_datafiles/dm6_TSS_RefSeqNCBI.bed \
+  -g ../dm6_genome_datafiles/dm6.chrom.sizes \
+  -m ../metadata_files/ATAC_ids_complete_data.txt
 
-* You can adjust the `minP`, `signal threshold`, or `quantile` cutoffs in the R scripts as needed.
-* Designed for DNase-seq or ATAC-seq input data but flexible to other open chromatin assays.
-
----
-
+Final Output:
+dELS.bed — non-redundant set of distal transcriptional enhancers across all contexts.
