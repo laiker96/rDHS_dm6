@@ -44,7 +44,7 @@ build_reference_bed() {
     cat "$metadata" | while read -r sample_id; do
         bedmap --echo \
                --indicator \
-               --fraction-either 0.6 \
+               --fraction-either 0.5 \
                --delim '\t' \
                "${workdir}/reference.bed" \
                "${workdir}/DHSs/Processed-DHSs/output.${sample_id}" \
