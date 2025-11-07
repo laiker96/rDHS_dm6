@@ -82,7 +82,7 @@ rDHS_dm6/
 - **bedmap (from BEDOPS ≥ 2.4.40)**  
 - **MACS3 ≥ 3.0.0**  
 - **R ≥ 4.3.0** with the package:
-  - `optparse`
+- **optparse**
 
 ---
 
@@ -94,18 +94,18 @@ Each step corresponds to one of the main scripts described above.
 ### 1. Generate representative DHSs
 ```bash
 bash generate_rDHS.sh -w ../ -l ../metadata/ATAC.txt -j 14
-
-2. Annotate rDHSs with H3K27ac signal
-
+```
+### 2. Annotate rDHSs with H3K27ac signal
+```bash
 bash annotate_rDHSs.sh \
   -w ../dELS_all_contexts_tests \
   -m ../metadata_files/ATAC_ids_complete_data.txt \
   -g ../dm6_genome_datafiles/dm6.chrom.sizes \
   -a ../signal_files/H3K27ac \
   -e ../metadata_files/H3K27ac_ids.txt
-
-3. Generate candidate cis-regulatory elements (cCREs)
-
+```
+### 3. Generate candidate cis-regulatory elements (cCREs)
+```bash
 Rscript generate_cCREs.R \
   -l ../dELS_all_contexts_tests/dataset_left.bed \
   -r ../dELS_all_contexts_tests/dataset_right.bed \
@@ -113,14 +113,14 @@ Rscript generate_cCREs.R \
   -a ../dELS_all_contexts_tests/reference.bed \
   -o ../dELS_all_contexts_tests/cCREs.bed \
   -p 0.6
-
-4. Filter distal enhancers (remove promoter-proximal elements)
-
+```
+### 4. Filter distal enhancers (remove promoter-proximal elements)
+```bash
 bash filter_dELS.sh \
   -c ../dELS_all_contexts_tests/cCREs.bed \
   -t ../dm6_genome_datafiles/dm6_TSS_RefSeqNCBI.bed \
   -g ../dm6_genome_datafiles/dm6.chrom.sizes \
   -m ../metadata_files/ATAC_ids_complete_data.txt
-
+```
 Final Output:
 dELS.bed — non-redundant set of distal transcriptional enhancers across all contexts.
