@@ -1,7 +1,9 @@
 #!/bin/bash
 
 set -euo pipefail
-
+# Determine the absolute directory of this script once
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export SCRIPT_DIR  # make it visible to all exported functions
 # ------------------ HELP & ARGUMENT PARSING ------------------ #
 usage() {
     echo "Usage: $0 -w working_directory -l file_list -j jobs"
@@ -89,7 +91,7 @@ process_enrichment_file() {
 
     local dataDir="${workdir}/peak_files/ATAC/${enrich}"
     local minP=325
-    local scriptDir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/python_scripts/"
+    local scriptDir="${SCRIPT_DIR}/python_scripts/"
 
     echo "Step 1 ..."
     cp "$dataDir/${enrich}_qpois.bed" $dataDir/tmp.1
@@ -178,7 +180,7 @@ finalize_dhs() {
 
     local dhs_dir="${workdir}/DHSs"
     local processed_dir="${dhs_dir}/Processed-DHSs"
-    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/python_scripts/"
+    local scriptDir="${SCRIPT_DIR}/python_scripts/"
     local all_bed="${dhs_dir}/DHS-All.bed"
     local filtered="${dhs_dir}/DHS-Filtered.bed"
     local tmp_sorted="${dhs_dir}/sorted"
@@ -204,7 +206,7 @@ finalize_dhs() {
         echo -e "\t$(wc -l < "$tmp_sorted") remaining..."
 
         bedtools merge -i "$tmp_sorted" -c 4,6 -o collapse,collapse > "${dhs_dir}/merge"
-        python3 "${script_dir}/pick_best_peak.py" "${dhs_dir}/merge" > "${dhs_dir}/peak-list"
+        python3 "${scriptDir}/pick_best_peak.py" "${dhs_dir}/merge" > "${dhs_dir}/peak-list"
 
         awk 'FNR==NR {x[$1]; next} ($4 in x)' "${dhs_dir}/peak-list" "$tmp_sorted" >> "$rpeaks"
         bedtools intersect -v -a "$tmp_sorted" -b "$rpeaks" > "${dhs_dir}/remaining"

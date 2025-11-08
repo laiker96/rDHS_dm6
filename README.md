@@ -47,12 +47,11 @@ The workflow consists of four main stages:
 
 ---
 
-# Repository Structure
+# Working Directory Structure
 ```bash
-rDHS_dm6/
-├── data/
+./
+├── peaks/
 │ ├── ATAC_seq/ # ATAC-seq peak and signal files
-│ ├── H3K27ac/ # H3K27ac signal files
 │ ├── dm6.chrom.sizes # Genome size file
 │ └── TSSs_dm6.bed # Reference transcription start sites
 ├── metadata/
@@ -75,13 +74,13 @@ rDHS_dm6/
 
 ---
 
-# Dependencies
+# Tested with
 
-- **bash ≥ 4.0**  
-- **bedtools ≥ 2.30.0**  
-- **bedmap (from BEDOPS ≥ 2.4.40)**  
-- **MACS3 ≥ 3.0.0**  
-- **R ≥ 4.3.0** with the package:
+- **bedtools == 2.31.0**  
+- **bedmap == 2.4.41**  
+- **python == 3.12**
+- **MACS3 == 3.0.3**  
+- **R ≥ 4.5.2** with the package:
 - **optparse**
 
 ---
